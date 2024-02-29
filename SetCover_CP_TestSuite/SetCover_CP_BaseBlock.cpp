@@ -297,10 +297,10 @@ TEST(CategoryPartition_BaseBlockCriteria, TestCase8) {
 TEST(CategoryPartition_BaseBlockCriteria, TestCase9) { 
     register_signal_handler();   
     if (setjmp(jump_buffer) == 0) {
-        const char *testArgs[] = { "SetCover.c", "-f", "tests/CP_TestsWithoutErrorBlocks/CP_BaseBlock/test_9.jpeg" };
+        const char *testArgs[] = { "SetCover.c", "-f", "tests/CP_TestsWithoutErrorBlocks/CP_BaseBlock/test_9.txt" };
         int argc = sizeof(testArgs) / sizeof(testArgs[0]);
     
-        std::string expectedOutputFileName = "expected_outputs/CP_TestsWithoutErrorBlocks/CP_BaseBlock/output_9txt";
+        std::string expectedOutputFileName = "expected_outputs/CP_TestsWithoutErrorBlocks/CP_BaseBlock/output_9.txt";
 
         testing::internal::CaptureStdout();  // Redirect stdout to a buffer
 

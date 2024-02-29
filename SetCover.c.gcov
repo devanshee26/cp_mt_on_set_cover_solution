@@ -1,0 +1,409 @@
+        -:    0:Source:SetCover.c
+        -:    0:Graph:SetCover.gcno
+        -:    0:Data:SetCover.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:/*
+        -:    2: * SetCover.c
+        -:    3: */
+        -:    4:
+        -:    5:#include "SetCover.h"
+        -:    6:#include <stdio.h>
+        -:    7:#include <stdlib.h>
+        -:    8:#include <assert.h>
+        -:    9:#include <string.h>
+        -:   10:#include <stdbool.h>
+        -:   11:#include <signal.h>
+        -:   12:
+        -:   13://buffer used by input statements
+        -:   14:char inbuf[1024];
+        -:   15:char _file[1024];
+        -:   16:
+        -:   17:typedef struct Set Set;
+        -:   18:
+        -:   19:struct Set /* the state of the game at each possible move */
+        -:   20:{
+        -:   21:	int nGlobalSetSize;
+        -:   22:	int nSubSets;
+        -:   23:	int* originalOrder;
+        -:   24:	int* nSubSetSizes;
+        -:   25:	int** subsets;
+        -:   26:	int** subSetsSizesSum;
+        -:   27:};
+        -:   28:
+        -:   29:typedef struct Solution Solution;
+        -:   30:struct Solution
+        -:   31:{
+        -:   32:	int nSolutionSize;
+        -:   33:	int* subSets;
+        -:   34:	int* boolIncluded;
+        -:   35:};
+        -:   36:
+        -:   37:Set* set;
+        -:   38:Solution* solution;
+        -:   39:Solution* bestSolution;
+        -:   40:
+    #####:   41:void intHandler(int dummy) {
+    #####:   42:	printSolution(bestSolution);
+    #####:   43:    exit(0);
+        -:   44:}
+        -:   45:
+        9:   46:void runSetCover(int argc, char *argv[]) {
+        9:   47:	if(init_args(argc, argv) == 0) {
+        9:   48:		if(readGameFile(_file) == 0) {
+        9:   49:			sortSubSets();
+        9:   50:			createSolutionStruct();
+        -:   51:
+        9:   52:			greedy();
+        -:   53:
+        9:   54:			backTrack4(solution, 0, 0);
+        -:   55:
+        9:   56:			printSolution(bestSolution);
+        9:   57:		}
+        9:   58:	}
+        9:   59:}
+        -:   60:
+        -:   61:// int main(int argc, char *argv[]) {
+        -:   62:// 	signal(SIGINT, intHandler);
+        -:   63:// 	runSetCover(argc, argv);
+        -:   64:// 	return 0;
+        -:   65:// }
+        -:   66:
+        9:   67:void greedy() {
+        -:   68:	int i;
+        -:   69:	int temp;
+        9:   70:	bestSolution->nSolutionSize = 0;
+        9:   71:	addSubSet(bestSolution, 0);
+        9:   72:	int addIndex = 0;
+        9:   73:	int addNumber = 0;
+        -:   74:
+       63:   75:	while(!checkSolution(bestSolution)) {
+       54:   76:		addIndex = 0;
+       54:   77:		addNumber = 0;
+     1674:   78:		for(i=0; i<set->nSubSets; i++) {
+     1620:   79:			if(!containsSubSet(bestSolution, i)) {
+     1431:   80:				temp = numberOfUncoveredElements(i);
+     1431:   81:				if(temp > addNumber) {
+       72:   82:					addNumber = temp;
+       72:   83:					addIndex = i;
+       72:   84:				}
+     1431:   85:			}
+     1620:   86:		}
+       54:   87:		addSubSet(bestSolution, addIndex);
+        -:   88:	}
+        -:   89:	//printSolution(bestSolution);
+        9:   90:}
+        -:   91:
+     1431:   92:int numberOfUncoveredElements(int subSetIndex) {
+        -:   93:	int i;
+     1431:   94:	int count=0;
+        -:   95:
+     6834:   96:	for(i=0; i<set->nSubSetSizes[subSetIndex]; i++) {
+     5403:   97:		if(!bestSolution->boolIncluded[set->subsets[subSetIndex][i] - 1])
+      873:   98:			count++;
+     5403:   99:	}
+        -:  100:
+     1431:  101:	return count;
+        -:  102:}
+        -:  103:
+        -:  104://This sorts the subsets by size
+        9:  105:void sortSubSets() {
+        -:  106:	int i,j;
+        -:  107:	int tempInt;
+        -:  108:	int* tempIntP;
+      279:  109:	for(i=0; i<set->nSubSets;++i) {
+     4185:  110:		for(j=i+1; j<set->nSubSets; ++j) {
+     3915:  111:			if(set->nSubSetSizes[i] < set->nSubSetSizes[j]) {
+      226:  112:				tempInt = set->nSubSetSizes[i];
+      226:  113:				tempIntP = set->subsets[i];
+      226:  114:				set->subsets[i] = set->subsets[j];
+      226:  115:				set->subsets[j] = tempIntP;
+      226:  116:				set->nSubSetSizes[i] = set->nSubSetSizes[j];
+      226:  117:				set->nSubSetSizes[j] = tempInt;
+      226:  118:				tempInt = set->originalOrder[i];
+      226:  119:				set->originalOrder[i] = set->originalOrder[j];
+      226:  120:				set->originalOrder[j] = tempInt;
+      226:  121:			}
+     3915:  122:		}
+      270:  123:	}
+        -:  124:	//Get Memory for sizes table
+        9:  125:	set->subSetsSizesSum = (int **) malloc(sizeof(int *) * set->nSubSets);
+      279:  126:	for(i=0; i<set->nSubSets; i++) {
+      270:  127:		set->subSetsSizesSum[i] = (int *) malloc(sizeof(int) * set->nSubSets);
+      270:  128:		memset(set->subSetsSizesSum[i], 0, set->nSubSets);
+      270:  129:	}
+        -:  130:
+      279:  131:	for(i=0; i<set->nSubSets; i++) {
+      270:  132:		tempInt = 0;
+     4455:  133:		for(j=i; j<set->nSubSets; j++) {
+     4185:  134:			tempInt += set->nSubSetSizes[j];
+     4185:  135:			set->subSetsSizesSum[i][j-i] = tempInt;
+     4185:  136:		}
+      270:  137:	}
+        -:  138:
+        -:  139:	//Check
+        -:  140:	/*for(i=0; i<set->nSubSets; i++) {
+        -:  141:		for(j=0; j<set->nSubSets; j++) {
+        -:  142:			printf("%u ", set->subSetsSizesSum[i][j]);
+        -:  143:		}
+        -:  144:		printf("\n");
+        -:  145:	}*/
+        9:  146:}
+        -:  147:
+        9:  148:void createSolutionStruct() {
+        -:  149:	int i;
+        9:  150:	solution = (Solution *)malloc(sizeof(Solution));
+        9:  151:	solution->subSets = (int *)malloc(sizeof(int) * (set->nSubSets));
+      279:  152:	for(i=0; i<(set->nSubSets); i++)
+      270:  153:		solution->subSets[i] = -1;
+        9:  154:	solution->boolIncluded = (int *)malloc(sizeof(int) * set->nGlobalSetSize);
+        9:  155:	memset(solution->boolIncluded, 0, set->nGlobalSetSize);
+        -:  156:
+        9:  157:	bestSolution = (Solution *)malloc(sizeof(Solution));
+        9:  158:	bestSolution->subSets = (int *)malloc(sizeof(int) * (set->nSubSets));
+      279:  159:	for (i = 0; i < (set->nSubSets); i++)
+      270:  160:		bestSolution->subSets[i] = -1;
+        9:  161:	bestSolution->boolIncluded = (int *)malloc(sizeof(int) * set->nGlobalSetSize);
+        9:  162:	memset(bestSolution->boolIncluded, 0, set->nGlobalSetSize);
+        9:  163:	bestSolution->nSolutionSize = set->nSubSets-1;
+        9:  164:}
+        -:  165:
+        9:  166:void copySolutionToBest() {
+        -:  167:	int i;
+        9:  168:	bestSolution->nSolutionSize = solution->nSolutionSize;
+       63:  169:	for(i=0;i<solution->nSolutionSize;i++)
+       54:  170:		bestSolution->subSets[i] = solution->subSets[i];
+        9:  171:}
+        -:  172:
+        -:  173:int depth = 0;
+        -:  174:
+  9984078:  175:void backTrack4(Solution* solution, int last, int sum) {
+        -:  176:	int i;
+        -:  177:
+  9984078:  178:	if(solution->nSolutionSize >= bestSolution->nSolutionSize)
+  7916784:  179:		return;
+        -:  180:
+  2067294:  181:	if(checkSolution(solution)) {
+        9:  182:		if(solution->nSolutionSize < bestSolution->nSolutionSize) {
+        9:  183:			copySolutionToBest();
+        -:  184:			// printf("New Solution Size : %u\n",bestSolution->nSolutionSize);
+        9:  185:		}
+        9:  186:		return;
+        -:  187:	}
+        -:  188:
+ 12051354:  189:	for(i=last; i<set->nSubSets; i++) {
+ 10222484:  190:		if(sum+set->subSetsSizesSum[i][(bestSolution->nSolutionSize-1)-solution->nSolutionSize] < set->nGlobalSetSize)
+   238415:  191:			return;
+        -:  192:		//add subset to solution
+  9984069:  193:		addSubSet(solution, i);
+  9984069:  194:		sum+=set->nSubSetSizes[i];
+        -:  195:		//recure
+  9984069:  196:		backTrack4(solution, i + 1, sum);
+  9984069:  197:		sum-=set->nSubSetSizes[i];
+        -:  198:		//remove solution
+  9984069:  199:		removeSubSet(solution, i);
+  9984069:  200:	}
+  9984078:  201:}
+        -:  202:
+  9984132:  203:void addSubSet(Solution* solution, int subSetIndex) {
+        -:  204:	int i;
+  9984132:  205:	solution->nSolutionSize++;
+  9984132:  206:	solution->subSets[solution->nSolutionSize-1] = subSetIndex;
+        -:  207:
+ 37488808:  208:	for(i=0; i<set->nSubSetSizes[subSetIndex]; i++) {
+ 27504676:  209:		solution->boolIncluded[set->subsets[subSetIndex][i] - 1] += 1;
+ 27504676:  210:	}
+        -:  211:
+        -:  212:	/*for(i=0; i<set->nSubSetSizes[subSetIndex]; i++) {
+        -:  213:		printf("%u ",solution->boolIncluded[i]);
+        -:  214:	}
+        -:  215:	printf("\n");*/
+  9984132:  216:}
+        -:  217:
+  9984069:  218:void removeSubSet(Solution* solution, int subSetIndex) {
+        -:  219:	int i;
+  9984069:  220:	solution->subSets[solution->nSolutionSize-1] = -1;
+  9984069:  221:	solution->nSolutionSize--;
+        -:  222:
+ 37488356:  223:	for(i=0; i<set->nSubSetSizes[subSetIndex]; i++) {
+ 27504287:  224:		solution->boolIncluded[set->subsets[subSetIndex][i] - 1] -= 1;
+ 27504287:  225:	}
+  9984069:  226:}
+        -:  227:
+     1620:  228:bool containsSubSet(Solution* solution, int subSetIndex) {
+        -:  229:	int i;
+        -:  230:
+     6786:  231:	for(i=0; i<solution->nSolutionSize; i++) {
+     5355:  232:		if(solution->subSets[i] == subSetIndex) {
+      189:  233:			return true;
+        -:  234:		}
+     5166:  235:	}
+        -:  236:
+     1431:  237:	return false;
+     1620:  238:}
+        -:  239:
+  2067357:  240:bool checkSolution(Solution* solution) {
+        -:  241:	int i;
+  2067357:  242:	bool allDone = true;
+  7098624:  243:	for(i=0; i<set->nGlobalSetSize; i++) {
+  7098606:  244:		int boolInc = solution->boolIncluded[i];
+  7098606:  245:		if(boolInc == 0) {
+  2067339:  246:			return false;
+        -:  247:		}
+  5031267:  248:	}
+       18:  249:	return allDone;
+  2067357:  250:}
+        -:  251:
+        9:  252:void printSolution(Solution* solution) {
+        -:  253:	int i;
+        9:  254:	printf("(%u)\n",solution->nSolutionSize);
+        -:  255:
+       63:  256:	for(i=0; i<solution->nSolutionSize; i++) {
+       54:  257:		printf("(%u) ", set->originalOrder[solution->subSets[i]]);
+       54:  258:		printSubSet(solution->subSets[i]);
+       54:  259:	}
+        9:  260:}
+        -:  261:
+       54:  262:void printSubSet(int nSubSetIndex) {
+        -:  263:	int j;
+      381:  264:	for (j = 0; j < set->nSubSetSizes[nSubSetIndex]; j++) {
+      327:  265:		printf("%u ", set->subsets[nSubSetIndex][j]);
+      327:  266:	}
+       54:  267:	printf("\n");
+       54:  268:}
+        -:  269:
+      297:  270:bool GetALine(FILE *f, char buf[]) {
+        -:  271:	/* Read a line of possibly commented input from the file *f.*/
+        -:  272:	char *p;
+      297:  273:	bool not_eof = false;
+      297:  274:	while ( fgets(buf, 1024, f) != NULL) {
+      288:  275:		p=strchr(buf, (int) '\n');
+      288:  276:		if ( p != NULL )
+      284:  277:			*p = '\0';
+        -:  278:
+      288:  279:		if (*buf != '\0') {
+      288:  280:			not_eof = true;
+      288:  281:			break;
+        -:  282:		}
+        -:  283:	}
+      297:  284:	return (not_eof);
+        -:  285:}
+        -:  286:
+        9:  287:int readGameFile(const char *s) {
+        -:  288:	FILE *f;
+        9:  289:	int lineno=0, i=0;
+        9:  290:	int subSetSize=0;
+        9:  291:	int nCurrSubSet=0;
+        -:  292:	char * pch;
+        -:  293:	char buf[1024];
+        -:  294:
+        9:  295:	if(s==NULL)	
+    #####:  296:		return 1;
+        -:  297:	//printf("%s\n", s);
+        9:  298:	f = fopen(s, "r");
+        9:  299:	if(f == NULL) {
+    #####:  300:		printf("Could not open file\n");
+    #####:  301:		return 1;
+        -:  302:	}
+        -:  303:
+        9:  304:	set = (Set *)malloc(sizeof(Set));
+        -:  305:
+      297:  306:	while(GetALine(f, inbuf)) {
+        -:  307:
+      288:  308:		switch(lineno) {
+        -:  309:		case 0:
+        9:  310:			set->nGlobalSetSize = atoi(inbuf);
+        9:  311:			break;
+        -:  312:		case 1:
+        9:  313:			set->nSubSets = atoi(inbuf);
+        9:  314:			set->nSubSetSizes = (int *) malloc(sizeof(int) * set->nSubSets);
+        9:  315:			set->originalOrder = (int *) malloc(sizeof(int) * set->nSubSets);
+      279:  316:			for(i=0; i<set->nSubSets; i++) {
+      270:  317:				set->originalOrder[i] = i+1;
+      270:  318:			}
+        9:  319:			set->subsets = (int**) malloc(sizeof(int*) * set->nSubSets);
+        9:  320:			break;
+        -:  321:		default:
+      270:  322:			subSetSize = 0;
+      270:  323:			strcpy(buf, inbuf);
+        -:  324:
+      270:  325:			pch = strtok(inbuf, " ");
+     1383:  326:			while (pch != NULL) {
+     1113:  327:				subSetSize++;
+     1113:  328:				pch = strtok(NULL, " ");
+        -:  329:			}
+        -:  330:
+      270:  331:			set->nSubSetSizes[nCurrSubSet] = subSetSize;
+      270:  332:			set->subsets[nCurrSubSet] = (int *) malloc(sizeof(int) * subSetSize);
+        -:  333:
+      270:  334:			i = 0;
+      270:  335:			pch = strtok(buf, " ");
+     1383:  336:			while (pch != NULL) {
+     1113:  337:				set->subsets[nCurrSubSet][i] = atoi(pch);
+     1113:  338:				i++;
+     1113:  339:				pch = strtok(NULL, " ");
+        -:  340:			}
+        -:  341:
+      270:  342:			nCurrSubSet++;
+      270:  343:		}
+        -:  344:
+      288:  345:		lineno++;
+        -:  346:	}
+        9:  347:	return 0;
+        9:  348:}
+        -:  349:
+        9:  350:int init_args(int argc, char **argv) {
+        9:  351:	char str[1024], *opts[] = { "-f" }; /* valid options */
+        9:  352:	int valopts[] = { 1 }; /* indicates options with values */
+        -:  353:	/* 0=none, 1=required, -1=optional */
+        -:  354:	int i, /* looper through all cmdline arguments */
+        -:  355:	a, /* current valid argument-value position */
+        -:  356:	op, /* position number of found option */
+        9:  357:	nopts = sizeof(opts) / sizeof(char *);
+        -:  358:
+        9:  359:	a = 1;
+       18:  360:	for (i = 1; i <= nopts; i++) {
+        9:  361:		if (a >= argc)
+    #####:  362:			break;
+        -:  363:
+        -:  364:		/* figure out which option by its position 0-(nopts-1) */
+        9:  365:		for (op = 0; op < nopts; op++) {
+        9:  366:			if (strncmp(opts[op], argv[a], 2) == 0) {
+        9:  367:				break; /* found it, move on */
+        -:  368:			}
+    #####:  369:		}
+        9:  370:		if (op == nopts) {
+    #####:  371:			fprintf(stderr, "Invalid option %s\n", argv[a]);
+    #####:  372:			printf("%s\n", "Pancake requires an input file. Use -f filename.txt");
+    #####:  373:			return 1;
+        -:  374:		}
+        -:  375:
+        9:  376:		*str = '\0';
+        -:  377:		/* extract value part of option-value pair */
+        9:  378:		if (valopts[op]) {
+        9:  379:			if ('\0' != argv[a][2]) { /* no space betw opt-value */
+    #####:  380:				strcpy(str, (argv[a] + 2));
+        9:  381:			} else if ('-' != *argv[a + 1]) { /* space betw opt-value */
+        9:  382:				strcpy(str, argv[++a]);
+        9:  383:			} else if (0 < valopts[op]) { /* required opt-val not found */
+    #####:  384:				fprintf(stderr, "Incomplete option %s\n", opts[op]);
+    #####:  385:				printf("%s\n", "Pancake requires an input file. Use -f filename.txt");
+    #####:  386:				return 1;
+        -:  387:			} /* opt-val not required */
+        9:  388:		}
+        -:  389:
+        -:  390:		/* tell us what to do here                   */
+        -:  391:		/* set indicators/variables based on results */
+        9:  392:		switch (op) {
+        -:  393:		case 0: /* -d */
+        9:  394:			strcpy(_file, str);
+        9:  395:			break; /* -f */
+        -:  396:		default:
+    #####:  397:			fprintf(stderr, "Programmer: bad option in main:init_args:switch");
+    #####:  398:		}
+        -:  399:
+        9:  400:		a++; /* move to next valid arg-value position */
+        -:  401:
+        9:  402:	} /* end for(i) */
+        9:  403:	return 0;
+        9:  404:}

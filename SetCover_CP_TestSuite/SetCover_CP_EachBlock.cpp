@@ -1,4 +1,4 @@
-#include "SetCover.h"
+#include "../SetCover.h"
 #include <gtest/gtest.h>
 #include <cstdio>
 #include <cstdlib>
@@ -72,7 +72,7 @@ TEST(CategoryPartition_EachBlockCriteria, TestCase1) {
 }
 
 // Test case 2
-TEST(CategoryPartition_EachBlockCriteria, TestCase1) {
+TEST(CategoryPartition_EachBlockCriteria, TestCase2) {
     register_signal_handler();
     if (setjmp(jump_buffer) == 0) {
         const char *testArgs[] = { "SetCover.c", "-f", "tests/CP_TestsWithoutErrorBlocks/CP_EachBlock/test_2.txt" };
@@ -103,7 +103,7 @@ TEST(CategoryPartition_EachBlockCriteria, TestCase1) {
 }
 
 // Test case 3
-TEST(CategoryPartition_EachBlockCriteria, TestCase1) {
+TEST(CategoryPartition_EachBlockCriteria, TestCase3) {
     register_signal_handler();
     if (setjmp(jump_buffer) == 0) {
         const char *testArgs[] = { "SetCover.c", "-f", "tests/CP_TestsWithoutErrorBlocks/CP_EachBlock/test_3.txt" };
@@ -134,7 +134,7 @@ TEST(CategoryPartition_EachBlockCriteria, TestCase1) {
 }
 
 // Test case 4
-TEST(CategoryPartition_EachBlockCriteria, TestCase1) {
+TEST(CategoryPartition_EachBlockCriteria, TestCase4) {
     register_signal_handler();
     if (setjmp(jump_buffer) == 0) {
         const char *testArgs[] = { "SetCover.c", "-f", "tests/CP_TestsWithoutErrorBlocks/CP_EachBlock/test_4.txt" };
@@ -165,7 +165,7 @@ TEST(CategoryPartition_EachBlockCriteria, TestCase1) {
 }
 
 // Test case 5
-TEST(CategoryPartition_EachBlockCriteria, TestCase1) {
+TEST(CategoryPartition_EachBlockCriteria, TestCase5) {
     register_signal_handler();
     if (setjmp(jump_buffer) == 0) {
         const char *testArgs[] = { "SetCover.c", "-f", "tests/CP_TestsWithoutErrorBlocks/CP_EachBlock/test_5.txt" };

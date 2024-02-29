@@ -181,7 +181,7 @@ void backTrack4(Solution* solution, int last, int sum) {
 	if(checkSolution(solution)) {
 		if(solution->nSolutionSize < bestSolution->nSolutionSize) {
 			copySolutionToBest();
-			printf("New Solution Size : %u\n",bestSolution->nSolutionSize);
+			// printf("New Solution Size : %u\n",bestSolution->nSolutionSize);
 		}
 		return;
 	}

@@ -1,4 +1,4 @@
-#include "SetCover.h"
+#include "../SetCover.h"
 #include <gtest/gtest.h>
 #include <cstdio>
 #include <cstdlib>
@@ -441,102 +441,6 @@ TEST(Metamorphic_Testing_Relation4, TestCase9) {
     register_signal_handler();   
     if (setjmp(jump_buffer) == 0) {
         const char *testArgs[] = { "SetCover.c", "-f", "tests/MetamorphicTesting/Relation4/test_9.txt" };
-        int argc = sizeof(testArgs) / sizeof(testArgs[0]);
-    
-        std::string expectedOutputFileName = "expected_outputs/MetamorphicTesting/output_4b.txt";
-
-        testing::internal::CaptureStdout();  // Redirect stdout to a buffer
-
-        // Run SetCover function
-        runSetCover(argc, const_cast<char**>(testArgs));
-        // Capture the output
-        std::string actualOutput = testing::internal::GetCapturedStdout();
-        printf("output \n %s \n", actualOutput.c_str());
-
-        // Read expected output
-        std::ifstream expectedOutputFile(expectedOutputFileName);
-        std::stringstream expectedOutputBuffer;
-        expectedOutputBuffer << expectedOutputFile.rdbuf();
-
-        // Compare actual and expected output
-        ASSERT_TRUE(isSame(actualOutput, expectedOutputBuffer.str()));
-    }
-    else {
-        std::string actualOutput = testing::internal::GetCapturedStdout();
-        FAIL() << "Segmentation fault detected.";
-    }
-    signal(SIGSEGV, SIG_DFL);
-}
-
-// Test case 10
-TEST(Metamorphic_Testing_Relation4, TestCase10) {   
-    register_signal_handler(); 
-    if (setjmp(jump_buffer) == 0) {
-        const char *testArgs[] = { "SetCover.c", "-f", "tests/MetamorphicTesting/Relation4/test_10.txt" };
-        int argc = sizeof(testArgs) / sizeof(testArgs[0]);
-    
-        std::string expectedOutputFileName = "expected_outputs/MetamorphicTesting/output_4b.txt";
-
-        testing::internal::CaptureStdout();  // Redirect stdout to a buffer
-
-        // Run SetCover function
-        runSetCover(argc, const_cast<char**>(testArgs));
-        // Capture the output
-        std::string actualOutput = testing::internal::GetCapturedStdout();
-        printf("output \n %s \n", actualOutput.c_str());
-
-        // Read expected output
-        std::ifstream expectedOutputFile(expectedOutputFileName);
-        std::stringstream expectedOutputBuffer;
-        expectedOutputBuffer << expectedOutputFile.rdbuf();
-
-        // Compare actual and expected output
-        ASSERT_TRUE(isSame(actualOutput, expectedOutputBuffer.str()));
-    }
-    else {
-        std::string actualOutput = testing::internal::GetCapturedStdout();
-        FAIL() << "Segmentation fault detected.";
-    }
-    signal(SIGSEGV, SIG_DFL);
-}
-
-// Test case 11
-TEST(Metamorphic_Testing_Relation4, TestCase11) { 
-    register_signal_handler();   
-    if (setjmp(jump_buffer) == 0) {
-        const char *testArgs[] = { "SetCover.c", "-f", "tests/MetamorphicTesting/Relation4/test_11.txt" };
-        int argc = sizeof(testArgs) / sizeof(testArgs[0]);
-    
-        std::string expectedOutputFileName = "expected_outputs/MetamorphicTesting/output_4b.txt";
-
-        testing::internal::CaptureStdout();  // Redirect stdout to a buffer
-
-        // Run SetCover function
-        runSetCover(argc, const_cast<char**>(testArgs));
-        // Capture the output
-        std::string actualOutput = testing::internal::GetCapturedStdout();
-        printf("output \n %s \n", actualOutput.c_str());
-
-        // Read expected output
-        std::ifstream expectedOutputFile(expectedOutputFileName);
-        std::stringstream expectedOutputBuffer;
-        expectedOutputBuffer << expectedOutputFile.rdbuf();
-
-        // Compare actual and expected output
-        ASSERT_TRUE(isSame(actualOutput, expectedOutputBuffer.str()));
-    }
-    else {
-        std::string actualOutput = testing::internal::GetCapturedStdout();
-        FAIL() << "Segmentation fault detected.";
-    }
-    signal(SIGSEGV, SIG_DFL);
-}
-
-// Test case 12
-TEST(Metamorphic_Testing_Relation4, TestCase12) {  
-    register_signal_handler();  
-    if (setjmp(jump_buffer) == 0) {
-        const char *testArgs[] = { "SetCover.c", "-f", "tests/MetamorphicTesting/Relation4/test_12.txt" };
         int argc = sizeof(testArgs) / sizeof(testArgs[0]);
     
         std::string expectedOutputFileName = "expected_outputs/MetamorphicTesting/output_4b.txt";

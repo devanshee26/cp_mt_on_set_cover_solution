@@ -1,4 +1,4 @@
-#include "SetCover.h"
+#include "../SetCover.h"
 #include <gtest/gtest.h>
 #include <cstdio>
 #include <cstdlib>
